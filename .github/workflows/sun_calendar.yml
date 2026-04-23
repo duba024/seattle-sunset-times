@@ -31,7 +31,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install requests ics pytz
+        run: pip install requests ics pytz astral
 
       - name: Generate ICS file
         run: python create_calendar_local.py
