@@ -40,7 +40,7 @@ def get_sun_events(current_date):
 
 c = Calendar()
 current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-dates = [(datetime.now(timezone.utc) + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+dates = [(datetime.now(timezone.utc) + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(90)]
 
 for date in dates:
     for event in get_sun_events(date):
