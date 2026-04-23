@@ -11,42 +11,44 @@ def get_sun_events(current_date):
     response = requests.get(sun_times_url)
     if response.status_code == 200:
         response_json = response.json()
+        results = response_json['results']
     else:
         return []
 
     time_format = "%I:%M:%S %p"
     year, month, day = map(int, current_date.split('-'))
     
-    # Convert the strings to datetime objects
-    datetime_objects = {
-        key: datetime.strptime(value, time_format).replace(tzinfo=pytz.utc)
-        for key, value in response_json['results'].items()
-        if key != 'day_length'
-    }
+    # Convert sunset string to a proper datetime object
+    sunset_str = results['sunset']
+    sunset_dt = datetime.strptime(sunset_str, time_format).replace(
+        tzinfo=pytz.utc, year=year, month=month, day=day
+    )
 
-    for key, dt_obj in datetime_objects.items():
-        datetime_objects[key] = dt_obj.replace(year=year, month=month, day=day)
-
-    calendar_time_format = "%Y-%m-%d %H:%M:%S"
-    events = []
-
-    # Create an event ONLY for today's sunset
+    # Create the single Sunset event
     e_sunset = Event()
     e_sunset.name = "🌇 Sunset"
-    e_sunset.begin = datetime_objects['sunset'].strftime(calendar_time_format)
+    e_sunset.begin = sunset_dt
     e_sunset.duration = {'seconds': 15*60}
-    events.append(e_sunset)
+    
+    return [e_sunset]
 
-    return events
-
+# 1. Initialize the calendar once
 c = Calendar()
-current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+# 2. Generate list of dates for the next 90 days
 dates = [(datetime.now(timezone.utc) + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(90)]
 
+# 3. Loop through and add every sunset to the calendar object
 for date in dates:
-    for event in get_sun_events(date):
-        c.events.add(event)
-    time.sleep(1)
+    try:
+        events = get_sun_events(date)
+        for event in events:
+            c.events.add(event)
+        # Sleep for 1 second to avoid being blocked by the API provider
+        time.sleep(1)
+    except Exception as e:
+        print(f"Error on {date}: {e}")
 
+# 4. SAVE THE FILE (Must be flush left, outside the loop)
 with open('sun.ics', 'w') as f:
     f.writelines(c.serialize_iter())
