@@ -1,4 +1,5 @@
 import requests
+import time
 from ics import Calendar, Event
 from datetime import datetime, timezone, timedelta
 import pytz
@@ -45,6 +46,7 @@ dates = [(datetime.now(timezone.utc) + timedelta(days=i)).strftime('%Y-%m-%d') f
 for date in dates:
     for event in get_sun_events(date):
         c.events.add(event)
+    time.sleep(1)
 
 with open('sun.ics', 'w') as f:
     f.writelines(c.serialize_iter())
